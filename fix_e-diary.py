@@ -24,12 +24,11 @@ def remove_chastisement(schoolkid):
         return f'Ученик {schoolkid} не обнаружен'
 
     chastisements = Chastisement.objects.filter(schoolkid=schoolkid)
-    count = chastisements.count()
 
     for chastisement in chastisements:
         chastisement.delete()
 
-    return f'Удалил {count} замечаний для {schoolkid}'
+    return f'Удалил замечания для {schoolkid}'
 
 
 def create_commendation(schoolkid, lesson):
