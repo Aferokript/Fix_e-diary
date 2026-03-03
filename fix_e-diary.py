@@ -2,37 +2,28 @@ from datacenter.models import Schoolkid, Mark, Lesson, Subject, Chastisement, Co
 import random
 
 
-def fix_points(schoolkid):
+def catch_error(schoolkid):
     try:
         schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid)
+        return schoolkid
     except Schoolkid.DoesNotExist:
-        return f'Ученик {schoolkid} не обнаружен'
+        return f'Ученик {schoolkid} не найден'
 
-    marks = Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3])
 
-    for mark in marks:
-        mark.points = 5
-        mark.save()
-
-    return f"Исправлено {marks.count()} оценок для {schoolkid}"
+def fix_points(schoolkid):
+    schoolkid = catch_error(schoolkid)
+    Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3]).update(points=5)
+    return f"Исправлены оценки для {schoolkid}"
 
 
 def remove_chastisement(schoolkid):
-    try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid)
-    except Schoolkid.DoesNotExist:
-        return f'Ученик {schoolkid} не обнаружен'
-
-    chastisements = Chastisement.objects.filter(schoolkid=schoolkid)
-
-    for chastisement in chastisements:
-        chastisement.delete()
-
-    return f'Удалил замечания для {schoolkid}'
+    schoolkid = catch_error(schoolkid)
+    Chastisement.objects.filter(schoolkid=schoolkid).delete()
+    return f'Удалены замечания для {schoolkid}'
 
 
 def create_commendation(schoolkid, lesson):
-    list_of_commendations = [
+    commendations = [
         'Молодец!',
         'Отлично!',
         'Хорошо!',
@@ -55,11 +46,7 @@ def create_commendation(schoolkid, lesson):
         'Так держать!'
     ]
 
-    try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid)
-    except Schoolkid.DoesNotExist:
-        return f'Ученик {schoolkid} не обнаружен'
-
+    schoolkid = catch_error(schoolkid)
     lesson = Lesson.objects.filter(
         year_of_study=schoolkid.year_of_study,
         group_letter=schoolkid.group_letter,
@@ -69,7 +56,7 @@ def create_commendation(schoolkid, lesson):
     if not lesson:
         return f'Урок {lesson} не найден'
 
-    commendation = random.choice(list_of_commendations)
+    commendation = random.choice(commendations)
 
     Commendation.objects.create(
         schoolkid=schoolkid,
@@ -80,4 +67,5 @@ def create_commendation(schoolkid, lesson):
     )
 
     return f'Добавил похвалу по предмету {lesson.subject} для {schoolkid}'
+
 
