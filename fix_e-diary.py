@@ -2,27 +2,27 @@ from datacenter.models import Schoolkid, Mark, Lesson, Subject, Chastisement, Co
 import random
 
 
-def catch_error(schoolkid):
+def get_schoolkid(schoolkid_name):
     try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid)
+        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
         return schoolkid
     except Schoolkid.DoesNotExist:
-        return f'Ученик {schoolkid} не найден'
+        return f'Ученик {schoolkid_name} не найден'
 
 
-def fix_points(schoolkid):
-    schoolkid = catch_error(schoolkid)
+def fix_points(schoolkid_name):
+    schoolkid = get_schoolkid(schoolkid_name)
     Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3]).update(points=5)
-    return f"Исправлены оценки для {schoolkid}"
+    return f"Исправлены оценки для {schoolkid_name}"
 
 
-def remove_chastisement(schoolkid):
-    schoolkid = catch_error(schoolkid)
+def remove_chastisement(schoolkid_name):
+    schoolkid = get_schoolkid(schoolkid_name)
     Chastisement.objects.filter(schoolkid=schoolkid).delete()
-    return f'Удалены замечания для {schoolkid}'
+    return f'Удалены замечания для {schoolkid_name}'
 
 
-def create_commendation(schoolkid, lesson):
+def create_commendation(schoolkid_name, lesson_title):
     commendations = [
         'Молодец!',
         'Отлично!',
@@ -46,18 +46,18 @@ def create_commendation(schoolkid, lesson):
         'Так держать!'
     ]
 
-    schoolkid = catch_error(schoolkid)
+    schoolkid = get_schoolkid(schoolkid_name)
+
     lesson = Lesson.objects.filter(
         year_of_study=schoolkid.year_of_study,
         group_letter=schoolkid.group_letter,
-        subject__title=lesson
+        subject__title=lesson_title
     ).first()
-
+    
     if not lesson:
-        return f'Урок {lesson} не найден'
+        return f'Урок {lesson_title} не найден'
 
     commendation = random.choice(commendations)
-
     Commendation.objects.create(
         schoolkid=schoolkid,
         subject=lesson.subject,
@@ -66,6 +66,4 @@ def create_commendation(schoolkid, lesson):
         created=lesson.date
     )
 
-    return f'Добавил похвалу по предмету {lesson.subject} для {schoolkid}'
-
-
+    return f'Добавил похвалу по предмету {lesson.subject} для {schoolkid_name}'
